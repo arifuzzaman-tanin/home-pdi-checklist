@@ -45,15 +45,25 @@ function ChecklistToolbar({ search, setSearch, filter, setFilter, onExpand, onCo
 }
 
 function StatusSelector({ item, value, onChange }) {
-  return <fieldset className="status-selector"><legend className="sr-only">Status for {item.title}</legend>{statusOptions.map((option) => <label key={option.value} title={option.label} className={`status-option status-${option.value} ${value === option.value ? 'selected' : ''}`}><input type="radio" name={`status-${item.id}`} value={option.value} checked={value === option.value} onChange={() => onChange(option.value)} /><span className="status-icon"><Icon name={option.icon} size={17} /></span><span>{option.shortLabel}</span></label>)}</fieldset>
+  return <fieldset className="status-selector"><legend className="sr-only">Status for {item.title}</legend>{statusOptions.map((option) => <label key={option.value} title={option.label} className={`status-option status-${option.value} ${value === option.value ? 'selected' : ''}`}><input type="radio" name={`status-${item.id}`} value={option.value} checked={value === option.value} onChange={() => onChange(option.value)} /><span>{option.shortLabel}</span></label>)}</fieldset>
 }
 
 function PhotoAttachment({ itemId, photos, onChange }) {
   const [previews, setPreviews] = useState({})
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [activePhoto, setActivePhoto] = useState(null)
   const inputRef = useRef(null)
   const inputId = `photos-${itemId}`
+
+  useEffect(() => {
+    if (!activePhoto) return undefined
+    const handleKey = (event) => {
+      if (event.key === 'Escape') setActivePhoto(null)
+    }
+    document.addEventListener('keydown', handleKey)
+    return () => document.removeEventListener('keydown', handleKey)
+  }, [activePhoto])
 
   useEffect(() => {
     let active = true
@@ -118,7 +128,7 @@ function PhotoAttachment({ itemId, photos, onChange }) {
     <input ref={inputRef} className="sr-only" id={inputId} type="file" accept="image/jpeg,image/png,image/webp,image/heic" multiple disabled={busy} onChange={(event) => upload(Array.from(event.target.files || []))} />
     <div className="photo-gallery">
       {photos.map((photoId, index) => <div className="photo-tile" key={photoId}>
-        {previews[photoId] ? <img src={previews[photoId]} alt={`Attached inspection photo ${index + 1}`} /> : <span className="photo-placeholder"><Icon name="camera" size={20} /></span>}
+        {previews[photoId] ? <button className="photo-preview-button" type="button" onClick={() => setActivePhoto(photoId)} aria-label={`View inspection photo ${index + 1}`}><img src={previews[photoId]} alt="" /></button> : <span className="photo-placeholder"><Icon name="camera" size={20} /></span>}
         <button className="photo-delete-button" type="button" onClick={() => remove(photoId)} disabled={busy} aria-label={`Remove photo ${index + 1}`} title="Remove photo"><Icon name="trash" size={13} /></button>
       </div>)}
       <label className={`photo-add-tile ${busy ? 'is-busy' : ''}`} htmlFor={inputId} aria-disabled={busy}>
@@ -126,6 +136,13 @@ function PhotoAttachment({ itemId, photos, onChange }) {
         <strong>{busy ? 'Adding…' : 'Add photos'}</strong>
       </label>
     </div>
+    {activePhoto && previews[activePhoto] && <div className="photo-viewer" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setActivePhoto(null) }}>
+      <div className="photo-viewer-dialog" role="dialog" aria-modal="true" aria-label="Inspection photo preview">
+        <button className="photo-viewer-close" type="button" onClick={() => setActivePhoto(null)} aria-label="Close photo preview" autoFocus><Icon name="x" size={20} /></button>
+        <img src={previews[activePhoto]} alt={`Enlarged inspection photo ${photos.indexOf(activePhoto) + 1}`} />
+        <p>Photo {photos.indexOf(activePhoto) + 1} of {photos.length}</p>
+      </div>
+    </div>}
     <p className="photo-privacy"><Icon name="shield-check" size={13} /> Compressed and stored only on this device</p>
     {error && <p className="inline-error" role="alert">{error}</p>}
   </div>
