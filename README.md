@@ -1,16 +1,27 @@
-# React + Vite
+# Home PDI Checklist
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React application for completing a pre-delivery home inspection checklist.
 
-Currently, two official plugins are available:
+## Local development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```sh
+npm ci
+npm run dev
+```
 
-## React Compiler
+Run the linter and production build locally with:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```sh
+npm run lint
+npm run build
+```
 
-## Expanding the ESLint configuration
+## GitHub Pages deployment
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+The GitHub Actions workflow in `.github/workflows/deploy.yml` runs lint and
+build checks for pushes to `main`, then deploys the production build to GitHub
+Pages. It can also be started manually from the **Actions** tab.
+
+In the repository settings, set **Pages → Build and deployment → Source** to
+**GitHub Actions**. The site will be published at
+<https://arifuzzaman-tanin.github.io/home-pdi-checklist/>.
