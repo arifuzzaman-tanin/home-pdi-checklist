@@ -25,13 +25,9 @@ const friendlyStatuses = {
   na: { label: "Doesn't apply", helper: 'Not relevant', Icon: Prohibit },
 }
 
-function BrandMark() {
-  return <span className="brand-mark"><House weight="fill" size={24} /><span><Check weight="bold" size={12} /></span></span>
-}
-
 function PDIHeader({ onExport, exporting }) {
   return <header className="app-header"><div className="header-inner">
-    <a className="brand" href="#top" aria-label="Home PDI, back to top"><BrandMark /><span>Home PDI</span></a>
+    <a className="brand" href="#top" aria-label="Home PDI, back to top">HOME PDI</a>
     <button className="button button-primary header-export" onClick={onExport} disabled={exporting}><DownloadSimple weight="bold" size={21} /><span>{exporting ? 'Preparing…' : 'Download report'}</span></button>
   </div></header>
 }
@@ -379,7 +375,7 @@ function App() {
       <div className="categories-list">{visibleCategories.map(({ category, items }) => <ChecklistCategory key={category.id} category={category} items={items} expanded={filtering || state.expanded[category.id]} onToggle={() => { if (!filtering) toggleExpanded(category.id) }} responseFor={responseFor} updateResponse={updateResponse} />)}</div>
       {selectedCategoryId && !visibleCategories.length && <div className="empty-state"><WarningCircle size={28} /><h3>No checklist items found</h3><p>Choose a different status.</p><button className="button button-secondary" onClick={() => setFilter('all')}>Clear filter</button></div>}
       <section className="legal-note"><Info size={19} /><p>This checklist is a personal inspection aid, not an official Tarion or government product. Keep the builder’s official PDI form and consider a qualified professional inspection.</p></section>
-      <footer><div><span className="footer-brand"><BrandMark /> Home PDI</span><p>Your inspection data and photos remain on this device.</p></div><div className="footer-actions"><button onClick={() => runExport('blank')} disabled={exporting}><FileText size={17} /> Blank checklist</button><button className="reset-button" onClick={() => setConfirmReset(true)}><Trash size={17} /> Start new inspection</button></div></footer>
+      <footer><div><span className="footer-brand">HOME PDI</span><p>Your inspection data and photos remain on this device.</p></div><div className="footer-actions"><button onClick={() => runExport('blank')} disabled={exporting}><FileText size={17} /> Blank checklist</button><button className="reset-button" onClick={() => setConfirmReset(true)}><Trash size={17} /> Start new inspection</button></div></footer>
     </main>
     <ConfirmDialog open={confirmReset} onCancel={() => setConfirmReset(false)} onConfirm={async () => { await resetInspection(); setConfirmReset(false); setFilter('all'); setSelectedCategoryId('hvac'); window.scrollTo({ top: 0, behavior: 'smooth' }) }} />
   </>

@@ -1,8 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
 
 :root {
   font-family: "DM Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-display: "Manrope", "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", "DM Sans", ui-sans-serif, system-ui, sans-serif;
   color: #0f172a; background: #f6f9fd; font-synthesis: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased;
   --primary: #2563eb; --primary-hover: #1d4ed8; --text: #0f172a; --muted: #64748b;
   --border: #dfe6f0; --border-strong: #cbd5e1; --surface: #fff; --background: #f6f9fd;
