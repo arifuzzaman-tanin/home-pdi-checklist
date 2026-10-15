@@ -1,51 +1,234 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  Bathtub, Camera, CaretDown, Check, ClipboardText, CookingPot,
+  Couch, DoorOpen, DownloadSimple, Drop, FileText, GridFour, House, Info,
+  Lightning, Minus, Plus, Prohibit, ShieldCheck,
+  Stairs, ThermometerSimple, Trash, Warehouse, WarningCircle, X,
+} from '@phosphor-icons/react'
 import './App.css'
 import { checklistCategories, statusOptions } from './data/pdiChecklist'
 import { usePDIInspection } from './hooks/usePDIInspection'
 import { compressPhoto, photoStore } from './lib/photoStore'
 import { downloadBlankChecklist, downloadInspectionReport } from './lib/pdiPdfGenerator'
 
-function Icon({ name, size = 20 }) {
-  const paths = {
-    check: <path d="m5 12 4 4L19 6" />, x: <><path d="m7 7 10 10" /><path d="m17 7-10 10" /></>, minus: <path d="M5 12h14" />, slash: <path d="M5 19 19 5" />,
-    chevron: <path d="m9 18 6-6-6-6" />, search: <><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></>, download: <><path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M5 21h14" /></>,
-    file: <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" /><path d="M14 2v6h6" /></>, camera: <><path d="M14.5 4 16 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h3l1.5-3Z" /><circle cx="12" cy="13" r="3" /></>,
-    trash: <><path d="M4 7h16" /><path d="M9 7V4h6v3" /><path d="m7 7 1 14h8l1-14" /></>, plus: <><path d="M12 5v14" /><path d="M5 12h14" /></>, info: <><circle cx="12" cy="12" r="9" /><path d="M12 11v6" /><path d="M12 7h.01" /></>,
-    house: <><path d="m3 11 9-8 9 8" /><path d="M5 10v10h14V10" /><path d="M9 20v-6h6v6" /></>, 'clipboard-check': <><rect x="5" y="4" width="14" height="17" rx="2" /><path d="M9 4V2h6v2" /><path d="m9 13 2 2 4-4" /></>,
-    thermometer: <><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0Z" /><path d="M12 9v7" /></>, droplets: <><path d="M12 3s5 5.3 5 10a5 5 0 0 1-10 0c0-4.7 5-10 5-10Z" /><path d="M9.5 14.5a2.5 2.5 0 0 0 2 1" /></>,
-    zap: <path d="M13 2 4 14h7l-1 8 9-12h-7Z" />, 'door-open': <><path d="M4 21h16" /><path d="M6 21V4l11-2v19" /><path d="M14 12h.01" /></>, 'panel-top': <><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18M12 9v11" /></>,
-    'cooking-pot': <><path d="M5 11h14l-1 9H6Z" /><path d="M3 11h18M8 7c0-2 2-2 2-4M14 7c0-2 2-2 2-4" /></>, bath: <><path d="M3 12h18v3a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5Z" /><path d="M6 12V6a3 3 0 0 1 6 0" /></>,
-    sofa: <><path d="M5 12V9a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v3" /><path d="M3 12a2 2 0 0 1 2 2v4h14v-4a2 2 0 0 1 2-2v8H3Z" /></>, stairs: <path d="M4 20h4v-4h4v-4h4V8h4" />,
-    warehouse: <><path d="m3 10 9-6 9 6v10H3Z" /><path d="M7 20v-6h10v6M7 10h.01M12 10h.01M17 10h.01" /></>, 'shield-check': <><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z" /><path d="m9 12 2 2 4-4" /></>,
-    alert: <><path d="M12 3 2 21h20Z" /><path d="M12 9v5M12 18h.01" /></>,
-    'circle-check': <><circle cx="12" cy="12" r="9" /><path d="m8.5 12 2.25 2.25L15.75 9" /></>,
-    'circle-x': <><circle cx="12" cy="12" r="9" /><path d="m9 9 6 6M15 9l-6 6" /></>,
-    clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
-    ban: <><circle cx="12" cy="12" r="9" /><path d="m6 6 12 12" /></>,
-  }
-  return <svg className="icon" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name] || paths.house}</svg>
+const categoryIcons = {
+  thermometer: ThermometerSimple, droplets: Drop, zap: Lightning, 'door-open': DoorOpen,
+  'panel-top': GridFour, 'cooking-pot': CookingPot, bath: Bathtub, sofa: Couch,
+  stairs: Stairs, warehouse: Warehouse, 'shield-check': ShieldCheck,
+  'clipboard-check': ClipboardText, house: House,
 }
 
-function PDIHeader({ percent, onExport, exporting }) {
-  return <header className="app-header"><div className="header-inner"><a className="brand" href="#top" aria-label="Home PDI Checklist, back to top"><span className="brand-mark"><Icon name="house" size={21} /><span><Icon name="check" size={12} /></span></span><span>Home PDI Checklist</span></a><div className="header-actions"><div className="header-progress" aria-label={`${percent}% inspection complete`}><strong>{percent}%</strong><span>complete</span></div><button className="button button-primary header-export" onClick={onExport} disabled={exporting} aria-label="Download report"><Icon name="download" size={17} /><span>{exporting ? 'Preparing…' : 'Download report'}</span></button></div></div></header>
+const friendlyStatuses = {
+  pass: { label: 'Looks good', helper: 'Marked as passed', Icon: Check },
+  fail: { label: 'Has an issue', helper: 'Flagged for review', Icon: WarningCircle },
+  'not-tested': { label: 'Not tested', helper: 'Not inspected', Icon: Minus },
+  na: { label: "Doesn't apply", helper: 'Not relevant', Icon: Prohibit },
+}
+
+function BrandMark() {
+  return <span className="brand-mark"><House weight="fill" size={24} /><span><Check weight="bold" size={12} /></span></span>
+}
+
+function PDIHeader({ onExport, exporting }) {
+  return <header className="app-header"><div className="header-inner">
+    <a className="brand" href="#top" aria-label="Home PDI, back to top"><BrandMark /><span>Home PDI</span></a>
+    <button className="button button-primary header-export" onClick={onExport} disabled={exporting}><DownloadSimple weight="bold" size={21} /><span>{exporting ? 'Preparing…' : 'Download report'}</span></button>
+  </div></header>
+}
+
+function ProgressSummary({ summary }) {
+  return <section className="progress-card" aria-labelledby="progress-heading">
+    <div className="progress-title"><h1 id="progress-heading">You’ve checked {summary.completed} of {summary.total} items</h1><strong>{summary.percent}%</strong></div>
+    <div className="progress-track" aria-hidden="true"><span style={{ width: `${summary.percent}%` }} /></div>
+    <div className="status-legend" aria-label="What each status means">
+      {statusOptions.map(({ value }) => {
+        const { label, helper, Icon } = friendlyStatuses[value]
+        return <div className={`legend-item legend-${value}`} key={value}><span className="legend-icon"><Icon weight="bold" size={18} /></span><span><strong>{label}</strong><small>{helper}</small></span></div>
+      })}
+    </div>
+  </section>
+}
+
+function AreaPicker({ value, onChange }) {
+  const [open, setOpen] = useState(false)
+  const [activeIndex, setActiveIndex] = useState(0)
+  const pickerRef = useRef(null)
+  const optionRefs = useRef([])
+  const areaOptions = [
+    { id: 'all', title: 'All areas', icon: 'house', items: checklistCategories.flatMap((category) => category.items) },
+    ...checklistCategories,
+  ]
+  const selectedCategory = areaOptions.find((category) => category.id === value)
+
+  useEffect(() => {
+    if (!open) return undefined
+    const handlePointerDown = (event) => {
+      if (!pickerRef.current?.contains(event.target)) setOpen(false)
+    }
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [open])
+
+  useEffect(() => {
+    if (open) optionRefs.current[activeIndex]?.focus()
+  }, [open, activeIndex])
+
+  const showMenu = (index = Math.max(0, areaOptions.findIndex((category) => category.id === value))) => {
+    setActiveIndex(index)
+    setOpen(true)
+  }
+
+  const selectCategory = (category) => {
+    onChange(category.id)
+    setOpen(false)
+  }
+
+  const handleButtonKeyDown = (event) => {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault()
+      showMenu(event.key === 'ArrowUp' ? areaOptions.length - 1 : Math.max(0, areaOptions.findIndex((category) => category.id === value)))
+    }
+  }
+
+  const handleMenuKeyDown = (event) => {
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      setOpen(false)
+      pickerRef.current?.querySelector('.area-picker-trigger')?.focus()
+      return
+    }
+    const nextIndex = event.key === 'Home' ? 0
+      : event.key === 'End' ? areaOptions.length - 1
+        : event.key === 'ArrowDown' ? (activeIndex + 1) % areaOptions.length
+          : event.key === 'ArrowUp' ? (activeIndex - 1 + areaOptions.length) % areaOptions.length
+            : null
+    if (nextIndex !== null) {
+      event.preventDefault()
+      setActiveIndex(nextIndex)
+    }
+  }
+
+  return <div className={`area-picker ${open ? 'is-open' : ''}`} ref={pickerRef}>
+    <button className="area-picker-trigger" type="button" aria-haspopup="listbox" aria-expanded={open} aria-controls="area-picker-menu" onClick={() => open ? setOpen(false) : showMenu()} onKeyDown={handleButtonKeyDown}>
+      <span className="area-picker-icon"><GridFour weight="fill" size={23} /></span>
+      <span className="area-picker-copy"><span className={selectedCategory ? 'area-picker-value' : 'area-picker-placeholder'}>{selectedCategory?.title || 'Select an inspection area'}</span>{selectedCategory && <small>{selectedCategory.items.length} inspection items</small>}</span>
+      <span className="area-picker-chevron"><CaretDown weight="bold" size={20} /></span>
+    </button>
+    {open && <div className="area-picker-menu" id="area-picker-menu" role="listbox" aria-label="Inspection areas" onKeyDown={handleMenuKeyDown}>
+      {areaOptions.map((category, index) => {
+        const Icon = categoryIcons[category.icon] || House
+        const selected = category.id === value
+        return <button ref={(node) => { optionRefs.current[index] = node }} className={`area-picker-option ${selected ? 'is-selected' : ''}`} type="button" role="option" aria-selected={selected} tabIndex={index === activeIndex ? 0 : -1} key={category.id} onClick={() => selectCategory(category)} onMouseEnter={() => setActiveIndex(index)}>
+          <span className="area-option-icon"><Icon weight="duotone" size={22} /></span>
+          <span><strong>{category.title}</strong><small>{category.items.length} inspection items</small></span>
+          <Check className="area-option-check" weight="bold" size={18} />
+        </button>
+      })}
+    </div>}
+  </div>
 }
 
 function InspectionDetails({ details, onChange }) {
   const [open, setOpen] = useState(false)
-  const fields = [['address', 'Property address', 'text', '123 Example Street'], ['city', 'City', 'text', 'Toronto'], ['province', 'Province', 'text', 'Ontario'], ['builder', 'Builder name', 'text', 'Builder or developer'], ['date', 'Inspection date', 'date', ''], ['inspector', 'Inspector / homeowner', 'text', 'Your name']]
-  return <section className="panel details-panel" aria-labelledby="details-heading"><button className="section-toggle" type="button" onClick={() => setOpen((value) => !value)} aria-expanded={open} aria-controls="inspection-details-fields"><span><span className="section-icon"><Icon name="file" /></span><span><strong id="details-heading">Inspection details</strong><small>Optional information included in your report</small></span></span><span className={`chevron ${open ? 'open' : ''}`}><Icon name="chevron" /></span></button>{open && <div id="inspection-details-fields" className="details-grid">{fields.map(([name, label, type, placeholder]) => <label key={name} className={name === 'address' ? 'field-wide' : ''}><span>{label}</span><input type={type} value={details[name] || ''} placeholder={placeholder} onChange={(event) => onChange(name, event.target.value)} /></label>)}<label><span>Property type</span><select value={details.propertyType || ''} onChange={(event) => onChange('propertyType', event.target.value)}><option value="">Select type</option><option>Detached</option><option>Semi-Detached</option><option>Townhouse</option><option>Condo</option><option>Other</option></select></label></div>}</section>
+  const fields = [
+    ['address', 'Property address', 'text', '123 Example Street'], ['city', 'City', 'text', 'Toronto'],
+    ['province', 'Province', 'text', 'Ontario'], ['builder', 'Builder name', 'text', 'Builder or developer'],
+    ['date', 'Inspection date', 'date', ''], ['inspector', 'Inspector / homeowner', 'text', 'Your name'],
+  ]
+  return <section className="details-panel">
+    <button className="details-toggle" type="button" onClick={() => setOpen((value) => !value)} aria-expanded={open} aria-controls="inspection-details-fields"><span className="details-icon"><FileText weight="duotone" size={23} /></span><span><strong>Inspection details</strong><small>Add the property and inspector to your report</small></span><CaretDown className={open ? 'is-open' : ''} weight="bold" size={20} /></button>
+    {open && <div id="inspection-details-fields" className="details-grid">
+      {fields.map(([name, label, type, placeholder]) => <label key={name} className={name === 'address' ? 'field-wide' : ''}><span>{label}</span><input type={type} value={details[name] || ''} placeholder={placeholder} onChange={(event) => onChange(name, event.target.value)} /></label>)}
+      <label><span>Property type</span><select value={details.propertyType || ''} onChange={(event) => onChange('propertyType', event.target.value)}><option value="">Select type</option><option>Detached</option><option>Semi-Detached</option><option>Townhouse</option><option>Condo</option><option>Other</option></select></label>
+    </div>}
+  </section>
 }
 
-function InspectionSummary({ summary }) {
-  return <section className="summary-section" aria-labelledby="overview-heading"><div className="summary-card"><div className="summary-copy"><div><span className="eyebrow">Progress</span><h2 id="overview-heading">{summary.completed} of {summary.total} inspected</h2></div><strong>{summary.percent}%</strong></div><div className="progress-track"><span style={{ width: `${summary.percent}%` }} /></div><div className="summary-counts" aria-label="Inspection results"><span className="count-pass"><Icon name="check" size={15} /> {summary.pass} passed</span><span className="count-fail"><Icon name="x" size={15} /> {summary.fail} issues</span><span><Icon name="minus" size={15} /> {summary['not-tested']} remaining</span>{summary.na > 0 && <span><Icon name="slash" size={15} /> {summary.na} N/A</span>}</div></div></section>
+function StatusFilter({ value, onChange }) {
+  const [open, setOpen] = useState(false)
+  const [activeIndex, setActiveIndex] = useState(0)
+  const filterRef = useRef(null)
+  const optionRefs = useRef([])
+  const options = [
+    { value: 'all', label: 'All items', helper: 'Show every checklist item', Icon: GridFour },
+    ...statusOptions.map(({ value: status }) => ({ value: status, ...friendlyStatuses[status] })),
+  ]
+  const selected = options.find((option) => option.value === value) || options[0]
+  const SelectedIcon = selected.Icon
+
+  useEffect(() => {
+    if (!open) return undefined
+    const handlePointerDown = (event) => {
+      if (!filterRef.current?.contains(event.target)) setOpen(false)
+    }
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [open])
+
+  useEffect(() => {
+    if (open) optionRefs.current[activeIndex]?.focus()
+  }, [open, activeIndex])
+
+  const showMenu = () => {
+    setActiveIndex(Math.max(0, options.findIndex((option) => option.value === value)))
+    setOpen(true)
+  }
+
+  const selectOption = (option) => {
+    onChange(option.value)
+    setOpen(false)
+  }
+
+  const handleMenuKeyDown = (event) => {
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      setOpen(false)
+      filterRef.current?.querySelector('.status-filter-trigger')?.focus()
+      return
+    }
+    const nextIndex = event.key === 'Home' ? 0
+      : event.key === 'End' ? options.length - 1
+        : event.key === 'ArrowDown' ? (activeIndex + 1) % options.length
+          : event.key === 'ArrowUp' ? (activeIndex - 1 + options.length) % options.length
+            : null
+    if (nextIndex !== null) {
+      event.preventDefault()
+      setActiveIndex(nextIndex)
+    }
+  }
+
+  return <div className={`status-filter ${open ? 'is-open' : ''}`} ref={filterRef}>
+    <button className="status-filter-trigger" type="button" aria-haspopup="listbox" aria-expanded={open} aria-controls="status-filter-menu" onClick={() => open ? setOpen(false) : showMenu()} onKeyDown={(event) => { if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); showMenu() } }}>
+      <span className={`status-filter-icon filter-${selected.value}`}><SelectedIcon weight="bold" size={20} /></span>
+      <span className="status-filter-copy"><small>Show status</small><strong>{selected.label}</strong></span>
+      <span className="status-filter-chevron"><CaretDown weight="bold" size={18} /></span>
+    </button>
+    {open && <div className="status-filter-menu" id="status-filter-menu" role="listbox" aria-label="Filter checklist by status" onKeyDown={handleMenuKeyDown}>
+      {options.map((option, index) => {
+        const Icon = option.Icon
+        const isSelected = option.value === value
+        return <button ref={(node) => { optionRefs.current[index] = node }} className={`status-filter-option filter-${option.value} ${isSelected ? 'is-selected' : ''}`} type="button" role="option" aria-selected={isSelected} tabIndex={index === activeIndex ? 0 : -1} key={option.value} onClick={() => selectOption(option)} onMouseEnter={() => setActiveIndex(index)}>
+          <span className="status-filter-option-icon"><Icon weight="bold" size={18} /></span><span><strong>{option.label}</strong><small>{option.helper}</small></span><Check className="status-filter-check" weight="bold" size={17} />
+        </button>
+      })}
+    </div>}
+  </div>
 }
 
-function ChecklistToolbar({ search, setSearch, filter, setFilter, onExpand, onCollapse, onBlank, exporting }) {
-  return <section className="toolbar panel" aria-label="Checklist tools"><div className="toolbar-top"><label className="search-box"><span className="sr-only">Search checklist</span><Icon name="search" size={19} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search checklist" /></label><label className="filter-box"><span className="sr-only">Filter by status</span><select value={filter} onChange={(event) => setFilter(event.target.value)}><option value="all">All statuses</option><option value="not-tested">Not tested</option><option value="pass">Passed</option><option value="fail">Failed</option><option value="na">Not applicable</option></select></label></div><div className="toolbar-actions"><div className="expand-actions"><button className="text-button" onClick={onExpand}>Expand all</button><span aria-hidden="true" /><button className="text-button" onClick={onCollapse}>Collapse all</button></div><button className="text-button blank-checklist" onClick={onBlank} disabled={exporting}><Icon name="file" size={16} /> Blank checklist</button></div></section>
+function ChecklistTools({ filter, setFilter }) {
+  return <div className="checklist-tools">
+    <div className="checklist-instruction"><span><ClipboardText weight="duotone" size={24} /></span><p><strong>Choose one status for every item.</strong> Select “Has an issue” for anything the builder should review, then add a note or photo.</p></div>
+    <StatusFilter value={filter} onChange={setFilter} />
+  </div>
 }
 
 function StatusSelector({ item, value, onChange }) {
-  return <fieldset className="status-selector"><legend className="sr-only">Status for {item.title}</legend>{statusOptions.map((option) => <label key={option.value} title={option.label} className={`status-option status-${option.value} ${value === option.value ? 'selected' : ''}`}><input type="radio" name={`status-${item.id}`} value={option.value} checked={value === option.value} onChange={() => onChange(option.value)} /><span>{option.shortLabel}</span></label>)}</fieldset>
+  return <fieldset className="status-selector"><legend className="sr-only">Choose a status for {item.title}</legend>
+    {statusOptions.map(({ value: status }) => {
+      const { label, helper, Icon } = friendlyStatuses[status]
+      return <label key={status} className={`status-option status-${status} ${value === status ? 'selected' : ''}`}><input type="radio" name={`status-${item.id}`} value={status} checked={value === status} onChange={() => onChange(status)} /><span className="status-icon"><Icon weight="bold" size={20} /></span><span className="status-copy"><strong>{label}</strong><small>{helper}</small></span>{value === status && <Check className="status-selected-check" weight="bold" size={12} aria-hidden="true" />}</label>
+    })}
+  </fieldset>
 }
 
 function PhotoAttachment({ itemId, photos, onChange }) {
@@ -58,9 +241,7 @@ function PhotoAttachment({ itemId, photos, onChange }) {
 
   useEffect(() => {
     if (!activePhoto) return undefined
-    const handleKey = (event) => {
-      if (event.key === 'Escape') setActivePhoto(null)
-    }
+    const handleKey = (event) => { if (event.key === 'Escape') setActivePhoto(null) }
     document.addEventListener('keydown', handleKey)
     return () => document.removeEventListener('keydown', handleKey)
   }, [activePhoto])
@@ -70,40 +251,27 @@ function PhotoAttachment({ itemId, photos, onChange }) {
     const urls = []
     Promise.all(photos.map(async (photoId) => {
       const blob = await photoStore.get(photoId)
-      if (blob) return [photoId, URL.createObjectURL(blob)]
-      return null
+      return blob ? [photoId, URL.createObjectURL(blob)] : null
     })).then((entries) => {
       const availableEntries = entries.filter(Boolean)
-      if (!active) {
-        availableEntries.forEach(([, url]) => URL.revokeObjectURL(url))
-        return
-      }
+      if (!active) { availableEntries.forEach(([, url]) => URL.revokeObjectURL(url)); return }
       availableEntries.forEach(([, url]) => urls.push(url))
       setPreviews(Object.fromEntries(availableEntries))
-    }).catch(() => {
-      if (active) setError('A photo preview is unavailable.')
-    })
-    return () => {
-      active = false
-      urls.forEach((url) => URL.revokeObjectURL(url))
-    }
+    }).catch(() => { if (active) setError('A photo preview is unavailable.') })
+    return () => { active = false; urls.forEach((url) => URL.revokeObjectURL(url)) }
   }, [photos])
 
   const upload = async (files) => {
     if (!files.length) return
-    setBusy(true)
-    setError('')
-    const addedPhotos = []
-    const failures = []
+    setBusy(true); setError('')
+    const addedPhotos = []; const failures = []
     for (const file of files) {
       try {
         const blob = await compressPhoto(file)
         const photoId = `${itemId}-${crypto.randomUUID()}`
         await photoStore.set(photoId, blob)
         addedPhotos.push(photoId)
-      } catch (uploadError) {
-        failures.push(uploadError.message || `Unable to save ${file.name}.`)
-      }
+      } catch (uploadError) { failures.push(uploadError.message || `Unable to save ${file.name}.`) }
     }
     if (addedPhotos.length) onChange([...photos, ...addedPhotos])
     if (failures.length) setError(failures.join(' '))
@@ -112,38 +280,20 @@ function PhotoAttachment({ itemId, photos, onChange }) {
   }
 
   const remove = async (photoId) => {
-    setBusy(true)
-    setError('')
-    try {
-      await photoStore.remove(photoId)
-      onChange(photos.filter((id) => id !== photoId))
-    } catch {
-      setError('Unable to remove this photo.')
-    } finally {
-      setBusy(false)
-    }
+    setBusy(true); setError('')
+    try { await photoStore.remove(photoId); onChange(photos.filter((id) => id !== photoId)) }
+    catch { setError('Unable to remove this photo.') }
+    finally { setBusy(false) }
   }
 
   return <div className="photo-attachment">
     <input ref={inputRef} className="sr-only" id={inputId} type="file" accept="image/jpeg,image/png,image/webp,image/heic" multiple disabled={busy} onChange={(event) => upload(Array.from(event.target.files || []))} />
     <div className="photo-gallery">
-      {photos.map((photoId, index) => <div className="photo-tile" key={photoId}>
-        {previews[photoId] ? <button className="photo-preview-button" type="button" onClick={() => setActivePhoto(photoId)} aria-label={`View inspection photo ${index + 1}`}><img src={previews[photoId]} alt="" /></button> : <span className="photo-placeholder"><Icon name="camera" size={20} /></span>}
-        <button className="photo-delete-button" type="button" onClick={() => remove(photoId)} disabled={busy} aria-label={`Remove photo ${index + 1}`} title="Remove photo"><Icon name="trash" size={13} /></button>
-      </div>)}
-      <label className={`photo-add-tile ${busy ? 'is-busy' : ''}`} htmlFor={inputId} aria-disabled={busy}>
-        <span><Icon name="plus" size={20} /></span>
-        <strong>{busy ? 'Adding…' : 'Add photos'}</strong>
-      </label>
+      {photos.map((photoId, index) => <div className="photo-tile" key={photoId}>{previews[photoId] ? <button className="photo-preview-button" type="button" onClick={() => setActivePhoto(photoId)} aria-label={`View inspection photo ${index + 1}`}><img src={previews[photoId]} alt="" /></button> : <span className="photo-placeholder"><Camera size={22} /></span>}<button className="photo-delete-button" type="button" onClick={() => remove(photoId)} disabled={busy} aria-label={`Remove photo ${index + 1}`}><Trash size={14} /></button></div>)}
+      <label className={`photo-add-tile ${busy ? 'is-busy' : ''}`} htmlFor={inputId} aria-disabled={busy} tabIndex={busy ? -1 : 0} onKeyDown={(event) => { if (!busy && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); inputRef.current?.click() } }}><span className="photo-add-icon"><Plus weight="bold" size={19} /></span><span className="photo-add-copy"><strong>{busy ? 'Adding…' : 'Add photos'}</strong><small>{busy ? 'Processing photos' : 'JPG, PNG or HEIC'}</small></span></label>
     </div>
-    {activePhoto && previews[activePhoto] && <div className="photo-viewer" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setActivePhoto(null) }}>
-      <div className="photo-viewer-dialog" role="dialog" aria-modal="true" aria-label="Inspection photo preview">
-        <button className="photo-viewer-close" type="button" onClick={() => setActivePhoto(null)} aria-label="Close photo preview" autoFocus><Icon name="x" size={20} /></button>
-        <img src={previews[activePhoto]} alt={`Enlarged inspection photo ${photos.indexOf(activePhoto) + 1}`} />
-        <p>Photo {photos.indexOf(activePhoto) + 1} of {photos.length}</p>
-      </div>
-    </div>}
-    <p className="photo-privacy"><Icon name="shield-check" size={13} /> Compressed and stored only on this device</p>
+    {activePhoto && previews[activePhoto] && <div className="photo-viewer" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setActivePhoto(null) }}><div className="photo-viewer-dialog" role="dialog" aria-modal="true" aria-label="Inspection photo preview"><button className="photo-viewer-close" type="button" onClick={() => setActivePhoto(null)} aria-label="Close photo preview" autoFocus><X size={20} /></button><img src={previews[activePhoto]} alt={`Enlarged inspection photo ${photos.indexOf(activePhoto) + 1}`} /><p>Photo {photos.indexOf(activePhoto) + 1} of {photos.length}</p></div></div>}
+    <p className="photo-privacy"><ShieldCheck size={14} /> Stored only on this device</p>
     {error && <p className="inline-error" role="alert">{error}</p>}
   </div>
 }
@@ -151,27 +301,88 @@ function PhotoAttachment({ itemId, photos, onChange }) {
 function ChecklistItem({ item, response, updateResponse }) {
   const [showDetails, setShowDetails] = useState(Boolean(response.note || response.photos.length || response.status === 'fail'))
   const detailsVisible = showDetails || response.status === 'fail' || Boolean(response.note || response.photos.length)
-  return <article className={`checklist-item ${response.status === 'fail' ? 'is-failed' : ''}`}><div className="item-main"><div className="item-copy"><h4>{item.title}{response.status === 'fail' && <span className="deficiency-badge"><Icon name="alert" size={13} /> Deficiency</span>}</h4><p>{item.description}</p></div><StatusSelector item={item} value={response.status} onChange={(status) => updateResponse(item.id, { status })} /></div>{!detailsVisible ? <button className="add-note-button" type="button" onClick={() => setShowDetails(true)}><Icon name="plus" size={15} /> Add note or photo</button> : <div className="item-details"><label><span>{response.status === 'fail' ? 'Deficiency note' : 'Inspection note'} <small>optional</small></span><textarea value={response.note} onChange={(event) => updateResponse(item.id, { note: event.target.value })} placeholder={response.status === 'fail' ? 'Describe the issue or deficiency…' : 'Add an observation, measurement, or reason this item could not be tested…'} rows="3" /></label><PhotoAttachment itemId={item.id} photos={response.photos} onChange={(photos) => updateResponse(item.id, { photos })} /></div>}</article>
+  return <article className={`checklist-item ${response.status === 'fail' ? 'is-failed' : ''}`}>
+    <div className="item-copy"><h3>{item.title}</h3><p>{item.description}</p></div>
+    <StatusSelector item={item} value={response.status} onChange={(status) => updateResponse(item.id, { status })} />
+    {!detailsVisible ? <button className="add-note-button" type="button" onClick={() => setShowDetails(true)}><span className="add-note-icon"><Camera weight="duotone" size={22} /></span><span className="add-note-copy"><strong>Add note or photo</strong><small>Document an observation</small></span><span className="add-note-chevron"><CaretDown weight="bold" size={16} /></span></button> : <div className="item-details">{!response.note && !response.photos.length && response.status !== 'fail' && <button className="close-details" type="button" onClick={() => setShowDetails(false)} aria-label="Close details" title="Close details"><X weight="bold" size={15} /></button>}<label><span>{response.status === 'fail' ? 'What’s the issue?' : 'Add a note'} <small>optional</small></span><textarea value={response.note} onChange={(event) => updateResponse(item.id, { note: event.target.value })} placeholder={response.status === 'fail' ? 'Describe what you found…' : 'Add an observation or measurement…'} rows="3" /></label><PhotoAttachment itemId={item.id} photos={response.photos} onChange={(photos) => updateResponse(item.id, { photos })} /></div>}
+  </article>
 }
 
 function ChecklistCategory({ category, items, expanded, onToggle, responseFor, updateResponse }) {
-  const complete = category.items.filter((item) => responseFor(item.id).status !== 'not-tested').length; const percent = category.items.length ? Math.round((complete / category.items.length) * 100) : 0; const panelId = `category-${category.id}`
-  return <section className={`category panel ${expanded ? 'expanded' : ''}`}><button className="category-header" type="button" onClick={onToggle} aria-expanded={expanded} aria-controls={panelId}><span className="category-icon"><Icon name={category.icon} size={22} /></span><span className="category-title"><strong>{category.title}</strong><small>{complete} of {category.items.length} completed <span aria-hidden="true">•</span> {percent}%</small><span className="mini-progress"><span style={{ width: `${percent}%` }} /></span></span><span className={`chevron ${expanded ? 'open' : ''}`}><Icon name="chevron" /></span></button>{expanded && <div id={panelId} className="category-body"><div className="category-intro"><div><p>{category.description}</p>{category.banner && <strong>{category.banner}</strong>}{category.caution && <p className="caution"><Icon name="info" size={16} /> {category.caution}</p>}</div></div><div className="items-list">{items.map((item) => <ChecklistItem key={item.id} item={item} response={responseFor(item.id)} updateResponse={updateResponse} />)}</div></div>}</section>
+  const complete = category.items.filter((item) => responseFor(item.id).status !== 'not-tested').length
+  const percent = category.items.length ? Math.round((complete / category.items.length) * 100) : 0
+  const Icon = categoryIcons[category.icon] || House
+  const panelId = `category-items-${category.id}`
+  return <section className={`category ${expanded ? 'expanded' : ''}`} id={`category-${category.id}`}>
+    <button className="category-header" type="button" onClick={onToggle} aria-expanded={expanded} aria-controls={panelId}><span className="category-icon"><Icon weight="duotone" size={29} /></span><span className="category-title"><strong>{category.title}</strong><small>{complete} of {category.items.length} items completed <span aria-hidden="true">•</span> {percent}%</small><span className="mini-progress"><span style={{ width: `${percent}%` }} /></span></span><CaretDown className={expanded ? 'is-open' : ''} weight="bold" size={22} /></button>
+    {expanded && <div id={panelId} className="category-body"><div className="category-intro"><p>{category.description}</p>{category.banner && <strong>{category.banner}</strong>}{category.caution && <p className="caution"><WarningCircle weight="fill" size={20} /> <span>{category.caution}</span></p>}</div><div className="items-list">{items.map((item) => <ChecklistItem key={item.id} item={item} response={responseFor(item.id)} updateResponse={updateResponse} />)}</div></div>}
+  </section>
 }
 
 function ConfirmDialog({ open, onCancel, onConfirm }) {
-  useEffect(() => { if (!open) return undefined; const handleKey = (event) => { if (event.key === 'Escape') onCancel() }; document.addEventListener('keydown', handleKey); return () => document.removeEventListener('keydown', handleKey) }, [open, onCancel])
+  useEffect(() => {
+    if (!open) return undefined
+    const handleKey = (event) => { if (event.key === 'Escape') onCancel() }
+    document.addEventListener('keydown', handleKey)
+    return () => document.removeEventListener('keydown', handleKey)
+  }, [open, onCancel])
   if (!open) return null
-  return <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onCancel() }}><div className="confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="reset-title" aria-describedby="reset-description"><span className="dialog-icon"><Icon name="alert" /></span><h2 id="reset-title">Start a new inspection?</h2><p id="reset-description">This clears all property details, statuses, notes, and photos stored on this device. This action cannot be undone.</p><div><button className="button button-secondary" onClick={onCancel} autoFocus>Cancel</button><button className="button button-danger" onClick={onConfirm}>Clear and start new</button></div></div></div>
+  return <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onCancel() }}><div className="confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="reset-title" aria-describedby="reset-description"><span className="dialog-icon"><WarningCircle weight="fill" size={24} /></span><h2 id="reset-title">Start a new inspection?</h2><p id="reset-description">This clears all property details, statuses, notes, and photos stored on this device. This cannot be undone.</p><div><button className="button button-secondary" onClick={onCancel} autoFocus>Cancel</button><button className="button button-danger" onClick={onConfirm}>Clear and start new</button></div></div></div>
 }
 
 function App() {
-  const { state, summary, responseFor, updateDetails, updateResponse, toggleExpanded, setAllExpanded, resetInspection, saveStatus } = usePDIInspection()
-  const [search, setSearch] = useState(''); const [filter, setFilter] = useState('all'); const [exporting, setExporting] = useState(false); const [exportError, setExportError] = useState(''); const [confirmReset, setConfirmReset] = useState(false); const normalizedSearch = search.trim().toLowerCase()
-  const visibleCategories = useMemo(() => checklistCategories.map((category) => { const categoryMatches = `${category.title} ${category.description}`.toLowerCase().includes(normalizedSearch); const items = category.items.filter((item) => { const matchesSearch = !normalizedSearch || categoryMatches || `${item.title} ${item.description}`.toLowerCase().includes(normalizedSearch); const matchesFilter = filter === 'all' || responseFor(item.id).status === filter; return matchesSearch && matchesFilter }); return { category, items } }).filter(({ items }) => items.length), [normalizedSearch, filter, responseFor])
-  const runExport = async (type) => { if (exporting) return; setExporting(true); setExportError(''); try { await new Promise((resolve) => setTimeout(resolve, 30)); if (type === 'blank') await downloadBlankChecklist(); else await downloadInspectionReport({ details: state.details, responses: state.responses, summary }) } catch (error) { console.error(error); setExportError('We could not create the PDF. Please try again or use a different browser.') } finally { setExporting(false) } }
-  const filtering = Boolean(normalizedSearch || filter !== 'all')
-  return <><PDIHeader percent={summary.percent} onExport={() => runExport('report')} exporting={exporting} /><main id="top"><section className="hero-section" aria-labelledby="page-title"><div className="context-label"><Icon name="house" size={15} /> Designed for Ontario home inspections</div><h1 id="page-title">Home PDI Checklist</h1><p className="hero-subtitle">Inspect your home with confidence. Check every detail, record deficiencies, and download your inspection report.</p><div className="start-note"><span><Icon name="thermometer" size={20} /></span><p><strong>Start with systems that need time.</strong> Turn on heating, cooling (when conditions permit), hot water, and ventilation, then inspect the rest of the home while they run.</p></div></section><InspectionDetails details={state.details} onChange={updateDetails} /><div className={`save-status save-${saveStatus}`} role="status"><span />{saveStatus === 'error' ? 'Unable to save locally — changes may not persist' : saveStatus === 'saving' ? 'Saving on this device…' : 'Saved on this device'}</div><InspectionSummary summary={summary} /><section className="checklist-section" aria-labelledby="checklist-heading"><div className="section-heading checklist-heading"><div><span className="eyebrow">Room-by-room walkthrough</span><h2 id="checklist-heading">Inspection checklist</h2></div><p>Choose one status for each item. Untested is the safe default.</p></div><ChecklistToolbar search={search} setSearch={setSearch} filter={filter} setFilter={setFilter} onExpand={() => setAllExpanded(true)} onCollapse={() => setAllExpanded(false)} onReport={() => runExport('report')} onBlank={() => runExport('blank')} exporting={exporting} />{exportError && <div className="export-error" role="alert"><Icon name="alert" size={18} /> {exportError}</div>}<div className="categories-list">{visibleCategories.map(({ category, items }) => <ChecklistCategory key={category.id} category={category} items={items} expanded={filtering || state.expanded[category.id]} onToggle={() => { if (!filtering) toggleExpanded(category.id) }} responseFor={responseFor} updateResponse={updateResponse} />)}</div>{!visibleCategories.length && <div className="empty-state"><span><Icon name="search" size={26} /></span><h3>No checklist items found</h3><p>Try another search or choose a different status.</p><button className="button button-secondary" onClick={() => { setSearch(''); setFilter('all') }}>Clear filters</button></div>}</section><section className="legal-note"><Icon name="info" size={18} /><p>This checklist is a personal inspection aid, not an official Tarion or government product. Keep the builder’s official PDI form, document inaccessible or weather-dependent items, and consider a qualified professional inspection. A completed checklist cannot guarantee a defect-free home.</p></section><footer><div><span className="brand footer-brand"><span className="brand-mark"><Icon name="house" size={18} /></span> Home PDI Checklist</span><p>Your inspection data and photos remain on this device.</p></div><button className="reset-button" onClick={() => setConfirmReset(true)}><Icon name="trash" size={15} /> Start new inspection</button></footer></main><ConfirmDialog open={confirmReset} onCancel={() => setConfirmReset(false)} onConfirm={async () => { await resetInspection(); setConfirmReset(false); setSearch(''); setFilter('all'); window.scrollTo({ top: 0, behavior: 'smooth' }) }} /></>
+  const { state, summary, responseFor, updateDetails, updateResponse, toggleExpanded, resetInspection, saveStatus } = usePDIInspection()
+  const [filter, setFilter] = useState('all')
+  const [selectedCategoryId, setSelectedCategoryId] = useState('hvac')
+  const [exporting, setExporting] = useState(false)
+  const [exportError, setExportError] = useState('')
+  const [confirmReset, setConfirmReset] = useState(false)
+  const filtering = filter !== 'all'
+
+  const visibleCategories = useMemo(() => checklistCategories.filter((category) => selectedCategoryId === 'all' || category.id === selectedCategoryId).map((category) => {
+    const items = category.items.filter((item) => {
+      const matchesFilter = filter === 'all' || responseFor(item.id).status === filter
+      return matchesFilter
+    })
+    return { category, items }
+  }).filter(({ items }) => items.length), [selectedCategoryId, filter, responseFor])
+
+  const runExport = async (type) => {
+    if (exporting) return
+    setExporting(true); setExportError('')
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 30))
+      if (type === 'blank') await downloadBlankChecklist()
+      else await downloadInspectionReport({ details: state.details, responses: state.responses, summary })
+    } catch (error) {
+      console.error(error)
+      setExportError('We could not create the PDF. Please try again or use a different browser.')
+    } finally { setExporting(false) }
+  }
+
+  const chooseArea = (id) => {
+    setSelectedCategoryId(id)
+    if (id !== 'all' && !state.expanded[id]) toggleExpanded(id)
+    if (id !== 'all') window.setTimeout(() => document.getElementById(`category-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80)
+  }
+
+  return <>
+    <PDIHeader onExport={() => runExport('report')} exporting={exporting} />
+    <main id="top">
+      <ProgressSummary summary={summary} />
+      <section className="area-section" aria-labelledby="area-heading"><h2 id="area-heading">Choose an area</h2><AreaPicker value={selectedCategoryId} onChange={chooseArea} /></section>
+      <section className="start-note"><span><House weight="duotone" size={28} /></span><p><strong>Start with systems that need time.</strong> Turn on heating, cooling (when conditions permit), hot water, and ventilation, then inspect the rest of the home while they run.</p></section>
+      <InspectionDetails details={state.details} onChange={updateDetails} />
+      <div className={`save-status save-${saveStatus}`} role="status"><span />{saveStatus === 'error' ? 'Unable to save locally' : saveStatus === 'saving' ? 'Saving…' : 'Saved on this device'}</div>
+      {selectedCategoryId && <ChecklistTools filter={filter} setFilter={setFilter} />}
+      {exportError && <div className="export-error" role="alert"><WarningCircle size={20} /> {exportError}</div>}
+      <div className="categories-list">{visibleCategories.map(({ category, items }) => <ChecklistCategory key={category.id} category={category} items={items} expanded={filtering || state.expanded[category.id]} onToggle={() => { if (!filtering) toggleExpanded(category.id) }} responseFor={responseFor} updateResponse={updateResponse} />)}</div>
+      {selectedCategoryId && !visibleCategories.length && <div className="empty-state"><WarningCircle size={28} /><h3>No checklist items found</h3><p>Choose a different status.</p><button className="button button-secondary" onClick={() => setFilter('all')}>Clear filter</button></div>}
+      <section className="legal-note"><Info size={19} /><p>This checklist is a personal inspection aid, not an official Tarion or government product. Keep the builder’s official PDI form and consider a qualified professional inspection.</p></section>
+      <footer><div><span className="footer-brand"><BrandMark /> Home PDI</span><p>Your inspection data and photos remain on this device.</p></div><div className="footer-actions"><button onClick={() => runExport('blank')} disabled={exporting}><FileText size={17} /> Blank checklist</button><button className="reset-button" onClick={() => setConfirmReset(true)}><Trash size={17} /> Start new inspection</button></div></footer>
+    </main>
+    <ConfirmDialog open={confirmReset} onCancel={() => setConfirmReset(false)} onConfirm={async () => { await resetInspection(); setConfirmReset(false); setFilter('all'); setSelectedCategoryId('hvac'); window.scrollTo({ top: 0, behavior: 'smooth' }) }} />
+  </>
 }
 
 export default App
